@@ -1,162 +1,47 @@
-﻿# secure_chat
-Secure Chat
+# Secure Chat  
+**End-to-End Encrypted Real-Time Messaging**
 
-Secure Chat là một ứng dụng nhắn tin bảo mật sử dụng mã hóa đầu cuối (End-to-End Encryption) và giao tiếp thời gian thực thông qua WebSocket.
-Ứng dụng được xây dựng bằng Flask, Flask-SocketIO, SQLAlchemy và sử dụng kết hợp RSA cùng AES-GCM để đảm bảo an toàn dữ liệu.
+Secure Chat là ứng dụng nhắn tin **bảo mật đầu cuối (E2EE)**, sử dụng **WebSocket** để giao tiếp thời gian thực và **Flask + SQLAlchemy** để quản lý dữ liệu.  
+Mọi tin nhắn được mã hóa bằng **RSA + AES-GCM**, đảm bảo **chỉ người nhận mới có thể giải mã**.
 
-1. Giới thiệu
+---
 
-Secure Chat cho phép hai người dùng trò chuyện trực tiếp và bảo mật.
-Các tin nhắn được mã hóa ở phía người gửi bằng khóa công khai của người nhận, sau đó giải mã ở phía người nhận bằng khóa riêng.
-Hệ thống hỗ trợ:
+## 1. Giới thiệu
 
-Đăng ký và đăng nhập người dùng bằng JWT.
+Ứng dụng cho phép **hai người dùng trò chuyện trực tiếp, an toàn tuyệt đối**.  
+Tính năng nổi bật:
 
-Lưu trữ và truy xuất tin nhắn mã hóa.
+- Đăng ký / Đăng nhập với **JWT**
+- Trao đổi khóa công khai qua API
+- Mã hóa tin nhắn bằng **RSA (trao đổi khóa)** + **AES-GCM (nội dung)**
+- Chat **thời gian thực** qua **WebSocket**
+- Lưu trữ tin nhắn đã mã hóa trong CSDL
 
-Chat thời gian thực bằng WebSocket.
+> **Không dùng thư viện `Crypto` có sẵn** — toàn bộ thuật toán được **tự viết bằng toán học thuần**.
 
-Mã hóa dữ liệu sử dụng RSA (trao đổi khóa) và AES-GCM (nội dung tin nhắn).
+---
 
-2. Cấu trúc thư mục
+## 2. Cấu trúc thư mục
+
+```bash
 secure_chat/
-│
-├── app.py                     # Flask Application chính
-├── config.py                  # Cấu hình cơ sở dữ liệu và JWT
+├── app.py                     # Ứng dụng Flask chính
+├── config.py                  # Cấu hình DB, JWT, Secret Key
 │
 ├── models/
-│   ├── user.py                # Định nghĩa bảng người dùng
-│   └── message.py             # Định nghĩa bảng tin nhắn
+│   ├── user.py                # Model User (username, password_hash, public_key, ...)
+│   └── message.py             # Model Message (sender_id, receiver_id, encrypted_data, iv, tag)
 │
 ├── routes/
-│   ├── auth_routes.py         # API xác thực người dùng
-│   └── chat_routes.py         # API gửi và nhận tin nhắn
+│   ├── auth_routes.py         # /auth/register, /auth/login
+│   └── chat_routes.py         # /chat/send, /chat/messages/<id>
 │
 ├── services/
-│   ├── api_client.py          # Giao tiếp REST API
-│   ├── crypto_client.py       # Mã hóa RSA và AES
-│   └── socket_client.py       # Client chat thời gian thực
+│   ├── api_client.py          # Gọi REST API (đăng nhập, gửi tin, lấy key)
+│   ├── crypto_client.py       # RSA, AES-GCM, OAEP, PBKDF2 (toàn bộ tự code toán học)
+│   └── socket_client.py       # Client WebSocket (chat thời gian thực)
 │
-├── socket_server.py           # WebSocket Server
+├── socket_server.py           # WebSocket Server (Flask-SocketIO)
 │
-├── requirements.txt           # Thư viện cần thiết
-└── test.py                    # Chạy thử trao đổi tin nhắn
-
-3. Cài đặt môi trường
-Bước 1. Cài đặt Python
-
-Yêu cầu Python 3.11 hoặc mới hơn.
-
-Kiểm tra:
-
-python --version
-
-Bước 2. Tạo môi trường ảo và cài đặt thư viện
-python -m venv venv
-venv\Scripts\activate        # Dành cho Windows
-# hoặc
-source venv/bin/activate     # Dành cho Linux/Mac
-
-pip install -r requirements.txt
-
-4. Cấu hình cơ sở dữ liệu
-
-Mặc định dự án sử dụng MySQL.
-Mở file config.py và chỉnh lại chuỗi kết nối cho phù hợp:
-
-SQLALCHEMY_DATABASE_URI = "mysql+pymysql://root:@localhost/secure_chat"
-
-
-Nếu chỉ muốn thử nghiệm nhanh, có thể dùng SQLite:
-
-SQLALCHEMY_DATABASE_URI = "sqlite:///secure_chat.db"
-
-
-Sau đó khởi tạo cơ sở dữ liệu:
-
-python
->>> from app import db, create_app
->>> app = create_app()
->>> with app.app_context():
-...     db.create_all()
-
-5. Chạy API Server
-
-Khởi động Flask API server:
-
-python app.py
-
-
-Mặc định chạy tại địa chỉ:
-
-http://127.0.0.1:5000
-
-
-Các endpoint chính:
-
-POST /auth/register — Đăng ký người dùng
-
-POST /auth/login — Đăng nhập và lấy token
-
-GET /auth/user/<id> — Lấy public key của người dùng
-
-POST /chat/send — Gửi tin nhắn (đã mã hóa)
-
-GET /chat/messages/<id> — Lấy danh sách tin nhắn
-
-6. Chạy WebSocket Server
-
-Mở một terminal mới và chạy:
-
-python socket_server.py
-
-
-Máy chủ WebSocket sẽ khởi động tại:
-
-http://127.0.0.1:5001
-
-7. Chạy Client Chat thời gian thực
-
-Mỗi người dùng cần mở một terminal riêng và chạy:
-
-python services\socket_client.py
-
-
-Khi được yêu cầu, nhập username đã đăng ký, ví dụ:
-
-Enter your username: hoang
-
-
-Ở một terminal khác:
-
-Enter your username: alice
-
-
-Sau khi cả hai đã kết nối, bạn có thể gửi tin nhắn:
-
-Send to: alice
-Message: hello
-
-
-Bên còn lại sẽ thấy:
-
-hoang: hello
-
-8. Kiểm thử API và mã hóa
-
-Để kiểm tra toàn bộ luồng gửi/nhận và mã hóa tin nhắn, chạy:
-
-python test.py
-
-
-Chương trình sẽ:
-
-Tạo hai người dùng.
-
-Sinh cặp khóa RSA cho mỗi người.
-
-Mã hóa tin nhắn bằng AES-GCM.
-
-Gửi qua API và nhận lại.
-
-Giải mã tin nhắn ở phía người nhận.
+├── requirements.txt           # Các thư viện cần thiết
+└── test.py                    # Kiểm thử toàn bộ luồng E2EE
