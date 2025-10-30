@@ -69,7 +69,6 @@ def main():
 )
             print(f"{msg['sender_id']} -> {msg['receiver_id']}: {plaintext_recv}")
         except Exception as e:
-            print(f"Failed to decrypt message: {e}")
-
+            print(f"Failed to decrypt messageđs: {e}")
 if __name__ == "__main__":
     main()
