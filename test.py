@@ -15,7 +15,7 @@ def main():
     # 2. Tạo keypair cho sender/receiver
     sender_priv, sender_pub = generate_rsa_keypair()
     receiver_priv, receiver_pub = generate_rsa_keypair()
-    
+    print("key--------------------------------------------------------:", sender_priv, receiver_priv)
     # 3. Register user
     register(sender_username, sender_password, sender_pub)
     register(receiver_username, receiver_password, receiver_pub)

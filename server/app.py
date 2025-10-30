@@ -1,43 +1,117 @@
-from flask import Flask
-from flask_socketio import SocketIO, emit, join_room
+# socket_server.py
+from flask import Flask, request
+from flask_socketio import SocketIO, emit, join_room, leave_room
+import logging
 
+# Basic Flask + SocketIO setup
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "secret!"
+# Use threading mode to avoid requiring eventlet/gevent on Windows
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
-# Ghi nhớ ai đã join (để debug)
+# Mapping username -> sid
 connected_users = {}
 
+# -------- Handlers --------
 @socketio.on("connect")
 def handle_connect():
-    print("Client connected")
+    sid = request.sid
+    app.logger.info(f"Client connected: sid={sid}")
+    # do not auto-assign username here; wait for 'join' event
 
 @socketio.on("disconnect")
 def handle_disconnect():
-    print("Client disconnected")
+    sid = request.sid
+    # remove any username that has this sid
+    removed = []
+    for username, u_sid in list(connected_users.items()):
+        if u_sid == sid:
+            removed.append(username)
+            connected_users.pop(username, None)
+            try:
+                leave_room(username)
+            except Exception:
+                pass
+    app.logger.info(f"Client disconnected: sid={sid}, removed users={removed}")
 
 @socketio.on("join")
 def handle_join(data):
-    username = data.get("username")
+    """
+    Client should emit:
+      sio.emit('join', {'username': 'hoang'})
+    """
+    username = (data.get("username") if isinstance(data, dict) else None)
     if not username:
+        emit("system_message", {"msg": "join failed: missing username"}, room=request.sid)
         return
+
+    username = str(username).strip()
+    if not username:
+        emit("system_message", {"msg": "join failed: empty username"}, room=request.sid)
+        return
+
+    # join room and register sid
     join_room(username)
     connected_users[username] = request.sid
-    print(f"[JOIN] {username} joined room '{username}'")
-    emit("system_message", {"msg": f"{username} joined the chat."}, broadcast=True)
+    app.logger.info(f"[JOIN] username={username} sid={request.sid}")
+    emit("system_message", {"msg": f"{username} joined"}, room=username)
 
 @socketio.on("send_message")
 def handle_send_message(data):
+    """
+    Expected data:
+    {
+      "sender": "hoang",
+      "receiver": "alice",
+      "payload": {
+         "ciphertext": "...",    # base64
+         "iv": "...",            # base64
+         "tag": "...",           # base64
+         "aes_key_encrypted": "..."  # base64 (RSA-encrypted)
+      }
+    }
+    Server will forward the payload as-is to receiver and to sender (for local display).
+    """
+    if not isinstance(data, dict):
+        app.logger.warning("send_message: invalid data (not dict)")
+        return
+
     sender = data.get("sender")
     receiver = data.get("receiver")
-    message = data.get("message")
+    payload = data.get("payload")
 
-    print(f"[MESSAGE] {sender} -> {receiver}: {message}")
-    # Gửi riêng cho người nhận
-    emit("receive_message", {"sender": sender, "message": message}, room=receiver)
-    # Gửi phản hồi lại cho người gửi (hiển thị tin của mình)
-    emit("receive_message", {"sender": sender, "message": message}, room=sender)
+    # basic validation
+    if not sender or not receiver or not isinstance(payload, dict):
+        app.logger.warning("send_message: missing fields: sender/receiver/payload")
+        emit("error", {"msg": "send_message failed: missing sender/receiver/payload"}, room=request.sid)
+        return
+
+    app.logger.info(f"[MESSAGE] {sender} -> {receiver}: (encrypted payload)")
+
+    message_event = {
+        "sender": sender,
+        "payload": payload
+    }
+
+    # forward to receiver room (if anyone joined that room)
+    try:
+        emit("receive_message", message_event, room=receiver)
+    except Exception as e:
+        app.logger.exception(f"Error emitting to receiver {receiver}: {e}")
+
+    # also forward to sender room so sender can render its own message
+    try:
+        emit("receive_message", message_event, room=sender)
+    except Exception as e:
+        app.logger.exception(f"Error emitting back to sender {sender}: {e}")
+
+# Optional: endpoint to list connected users (for debug)
+@app.route("/_connected_users")
+def list_connected():
+    return {"connected_users": connected_users}
 
 if __name__ == "__main__":
-    print("Server running at http://127.0.0.1:5001")
+    # enable logging to console
+    logging.basicConfig(level=logging.INFO)
+    app.logger.info("Starting Socket.IO server on http://0.0.0.0:5001")
     socketio.run(app, host="0.0.0.0", port=5001)

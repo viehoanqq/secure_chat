@@ -108,16 +108,14 @@ Import database có sẵn trong /database vào MySQL bằng phpMyAdmin hoặc d�
 - GET /chat/messages/<id> — Lấy tin nhắn (đã mã hóa) với user id
 
 ---
+## Chạy test.py
 
-## Ghi chú bảo mật
+Các bước nhanh để chạy test.py trong dự án:
 
-- Mã hóa thực hiện bằng kết hợp RSA (để trao đổi khóa) và AES‑GCM (để mã hóa nội dung).  
-- Tất cả thao tác mật mã được triển khai nội bộ theo yêu cầu dự án; kiểm thử và audit kỹ lưỡng trước khi sử dụng trong môi trường sản xuất.  
-- Không lưu trữ private key trên server; private key phải nằm trên client hoặc môi trường an toàn của người dùng.
-
+```
+         chạy server run.py
+         mở 1 cửa sổ terminal mới và chạy test.py
+         ```
 ---
 
-Nếu bạn muốn, tôi có thể:
-- Thêm hướng dẫn cấu hình Docker / docker-compose
-- Viết ví dụ request cURL hoặc Postman collection
-- Thêm README badge cho CI / coverage
+

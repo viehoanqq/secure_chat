@@ -4,7 +4,9 @@ from Crypto.Cipher import PKCS1_OAEP, AES
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Hash import SHA256
 from Crypto.Random import get_random_bytes
-
+import json
+from services import crypto_client
+import os
 def generate_rsa_keypair():
     key = RSA.generate(2048)
     return key.export_key().decode(), key.publickey().export_key().decode()
@@ -62,3 +64,21 @@ def decrypt_private_key(enc_dict, passphrase):
     ct = base64.b64decode(enc_dict["ciphertext"])
     cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
     return cipher.decrypt_and_verify(ct, tag).decode('utf-8')
+
+def save_private_key(username: str, private_key_pem: str, password: str):
+    """Lưu private key đã được mã hóa bằng mật khẩu"""
+    enc = encrypt_private_key(private_key_pem, password)
+    os.makedirs("keys", exist_ok=True)
+    filepath = f"keys/{username}_private.enc.json"
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(enc, f, indent=2)
+    print(f"[INFO] Private key saved: {filepath}")
+
+def load_private_key(username: str, password: str) -> str:
+    """Đọc và giải mã private key"""
+    filepath = f"keys/{username}_private.enc.json"
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"Private key not found: {filepath}")
+    with open(filepath, "r", encoding="utf-8") as f:
+        enc = json.load(f)
+    return decrypt_private_key(enc, password)
