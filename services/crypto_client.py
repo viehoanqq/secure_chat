@@ -1,3 +1,4 @@
+# services/crypto_client.py
 import base64
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP, AES
@@ -5,8 +6,9 @@ from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Hash import SHA256
 from Crypto.Random import get_random_bytes
 import json
-from services import crypto_client
 import os
+from services import api_client  # Import để tự động đăng ký
+
 def generate_rsa_keypair():
     key = RSA.generate(2048)
     return key.export_key().decode(), key.publickey().export_key().decode()
@@ -66,7 +68,6 @@ def decrypt_private_key(enc_dict, passphrase):
     return cipher.decrypt_and_verify(ct, tag).decode('utf-8')
 
 def save_private_key(username: str, private_key_pem: str, password: str):
-    """Lưu private key đã được mã hóa bằng mật khẩu"""
     enc = encrypt_private_key(private_key_pem, password)
     os.makedirs("keys", exist_ok=True)
     filepath = f"keys/{username}_private.enc.json"
@@ -75,10 +76,22 @@ def save_private_key(username: str, private_key_pem: str, password: str):
     print(f"[INFO] Private key saved: {filepath}")
 
 def load_private_key(username: str, password: str) -> str:
-    """Đọc và giải mã private key"""
     filepath = f"keys/{username}_private.enc.json"
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"Private key not found: {filepath}")
     with open(filepath, "r", encoding="utf-8") as f:
         enc = json.load(f)
     return decrypt_private_key(enc, password)
+
+# MỚI: Tự động sinh key + đăng ký + lưu
+def register_and_save_key(username: str, password: str):
+    private_pem, public_pem = generate_rsa_keypair()
+    print(f"[KEY] Generated RSA key pair for {username}")
+
+    status, data = api_client.register(username, password, public_pem)
+    if status != 201:
+        raise Exception(f"Register failed: {data.get('msg')}")
+
+    save_private_key(username, private_pem, password)
+    print(f"[KEY] Private key encrypted and saved")
+    return private_pem, public_pem
