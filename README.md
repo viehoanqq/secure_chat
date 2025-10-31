@@ -1,3 +1,8 @@
+
+py run.py
+python -m services.socket_client
+python -m services.main -> user1
+python -m services.main -> user2
 # Secure Chat  
 End-to-End Encrypted Real-Time Messaging — Secure Chat là ứng dụng trò chuyện thời gian thực với mã hóa đầu cuối (E2EE). Ứng dụng dùng Flask + SQLAlchemy cho backend, WebSocket cho realtime, và kết hợp RSA + AES‑GCM để bảo vệ nội dung. Mọi tin nhắn lưu trữ ở trạng thái đã mã hóa.
 
