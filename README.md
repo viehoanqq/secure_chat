@@ -97,6 +97,22 @@ Import database có sẵn trong /database vào MySQL bằng phpMyAdmin hoặc d�
   ```
 - Mặc định: http://127.0.0.1:5000
 
+- Chạy socket server:
+  ```
+  py server\\app.py
+  ```
+- Mặc định: http://127.0.0.1:5001
+
+
+- Chạy gui_user1:
+  ```
+  py -m services.chat_gui
+  ```
+
+- Chạy gui_user2:
+  ```
+  py -m services.chat_gui
+  ```
 ---
 
 ## API chính
@@ -107,15 +123,6 @@ Import database có sẵn trong /database vào MySQL bằng phpMyAdmin hoặc d�
 - POST /chat/send — Gửi tin nhắn (payload đã mã hóa)
 - GET /chat/messages/<id> — Lấy tin nhắn (đã mã hóa) với user id
 
----
-## Chạy test.py
-
-Các bước nhanh để chạy test.py trong dự án:
-
-```
-         chạy server run.py
-         mở 1 cửa sổ terminal mới và chạy test.py
-         ```
 ---
 
 
