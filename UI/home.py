@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QListWidget, QPushButton, QLabel, QFrame, QListWidgetItem
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont, QColor
 from services import api_client, crypto_client
 import socketio, threading
 
@@ -18,74 +19,154 @@ class HomePage(QWidget):
     def init_ui(self):
         self.setStyleSheet("""
             QListWidget {
-                background-color: #1a1a1a;
+                background-color: #f4f6f8;
                 border: none;
-                color: white;
+                color: #222;
+                outline: none;
             }
             QListWidget::item {
-                padding: 12px;
-                border-bottom: 1px solid #2a2a2a;
+                padding: 8px;
+                border: none;
+                border-radius: 8px;
+                background-color: #ffffff;
+                margin: 4px 0;
             }
-            QListWidget::item:hover { background-color: #2a2a2a; }
-            QListWidget::item:selected { background-color: #0088cc; }
+            QListWidget::item:hover { 
+                background-color: #e9f5ff;
+            }
+            QListWidget::item:selected { 
+                background-color: #d0ebff;
+                color: #0a3d62;
+            }
             QPushButton {
                 background-color: #0088cc;
                 color: white;
+                border: none;
                 border-radius: 8px;
-                padding: 8px 12px;
+                padding: 10px 16px;
+                font-weight: bold;
+                font-size: 13px;
             }
-            QPushButton:hover { background-color: #0099ee; }
+            QPushButton:hover { 
+                background-color: #0099ee;
+            }
+            QPushButton:pressed {
+                background-color: #0077bb;
+            }
+            QFrame {
+                background-color: #ffffff;
+            }
         """)
 
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
+        main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
 
+        # ===== SIDEBAR =====
         sidebar = QFrame()
-        sidebar.setFixedWidth(320)
-        sidebar.setStyleSheet("background-color: #111; border-right: 1px solid #333;")
-        sbl = QVBoxLayout(sidebar)
-        sbl.setContentsMargins(10, 10, 10, 10)
+        sidebar.setFixedWidth(340)
+        sidebar.setStyleSheet("""
+            QFrame {
+                background-color: #f8f9fa;
+                border-right: 1px solid #dee2e6;
+            }
+        """)
+        sidebar_layout = QVBoxLayout(sidebar)
+        sidebar_layout.setContentsMargins(16, 16, 16, 16)
+        sidebar_layout.setSpacing(12)
 
-        title = QLabel("SecureChat")
-        title.setStyleSheet("color:#0088cc;font-size:20px;font-weight:bold;")
-        sbl.addWidget(title)
+        # Header
+        header_layout = QHBoxLayout()
+        title = QLabel("💬 SecureChat")
+        title_font = QFont()
+        title_font.setPointSize(18)
+        title_font.setWeight(QFont.Bold)
+        title.setFont(title_font)
+        title.setStyleSheet("color: #0088cc;")
+        header_layout.addWidget(title)
+        header_layout.addStretch()
+        sidebar_layout.addLayout(header_layout)
 
-        chats_label = QLabel("Chats")
-        chats_label.setStyleSheet("color:#aaa;font-weight:bold;margin-top:15px;")
-        sbl.addWidget(chats_label)
+        sep1 = QFrame()
+        sep1.setStyleSheet("background-color: #dee2e6;")
+        sep1.setFixedHeight(1)
+        sidebar_layout.addWidget(sep1)
+
+        # Chats Section
+        chats_label = QLabel("Active Chats")
+        chats_font = QFont()
+        chats_font.setPointSize(11)
+        chats_font.setWeight(QFont.Bold)
+        chats_label.setFont(chats_font)
+        chats_label.setStyleSheet("color: #333; margin-top: 8px;")
+        sidebar_layout.addWidget(chats_label)
 
         self.chat_list = QListWidget()
-        self.chat_list.itemClicked.connect(self.on_chat_clicked)
-        sbl.addWidget(self.chat_list)
+        sidebar_layout.addWidget(self.chat_list, 1)
 
+        self.chat_list.itemClicked.connect(self.on_chat_clicked)
+
+        sep2 = QFrame()
+        sep2.setStyleSheet("background-color: #dee2e6;")
+        sep2.setFixedHeight(1)
+        sidebar_layout.addWidget(sep2)
+
+        # Online Users
         online_label = QLabel("Online Users")
-        online_label.setStyleSheet("color:#51cf66;font-weight:bold;margin-top:15px;")
-        sbl.addWidget(online_label)
+        online_font = QFont()
+        online_font.setPointSize(11)
+        online_font.setWeight(QFont.Bold)
+        online_label.setFont(online_font)
+        online_label.setStyleSheet("color: #2f9e44; margin-top: 8px;")
+        sidebar_layout.addWidget(online_label)
 
         self.online_list = QListWidget()
-        self.online_list.itemClicked.connect(self.start_chat_with_user)
-        sbl.addWidget(self.online_list)
+        sidebar_layout.addWidget(self.online_list, 1)
 
-        btns = QHBoxLayout()
+        self.online_list.itemClicked.connect(self.start_chat_with_user)
+
+        # Action Buttons
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(8)
         self.refresh_btn = QPushButton("Refresh")
         self.logout_btn = QPushButton("Logout")
-        btns.addWidget(self.refresh_btn)
-        btns.addWidget(self.logout_btn)
-        sbl.addLayout(btns)
+        btn_layout.addWidget(self.refresh_btn)
+        btn_layout.addWidget(self.logout_btn)
+        sidebar_layout.addLayout(btn_layout)
 
-        layout.addWidget(sidebar)
+        main_layout.addWidget(sidebar)
 
-        placeholder = QLabel("Select a chat to start messaging 💬")
-        placeholder.setStyleSheet("color:#777;font-size:16px;")
-        placeholder.setAlignment(Qt.AlignCenter)
-        layout.addWidget(placeholder, 1)
+        # ===== MAIN CONTENT =====
+        self.placeholder = QLabel("Select a chat to start messaging")
+        placeholder_font = QFont()
+        placeholder_font.setPointSize(16)
+        self.placeholder.setFont(placeholder_font)
+        self.placeholder.setStyleSheet("color: #777; background-color: #f4f6f8;")
+        self.placeholder.setAlignment(Qt.AlignCenter)
+        
+        # main_layout.addWidget(self.placeholder, 1)
+
+        # Tạo ChatPage (được ẩn ban đầu)
+        from .chat import ChatPage
+        self.chat_page = ChatPage(self.parent)
+        self.chat_page.hide()
+
+        # Widget trung tâm: chứa cả placeholder và chat_page
+        self.content_frame = QFrame()
+        content_layout = QVBoxLayout(self.content_frame)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.addWidget(self.placeholder)
+        content_layout.addWidget(self.chat_page)
+        main_layout.addWidget(self.content_frame, 1)
+
 
         self.refresh_btn.clicked.connect(self.refresh_chats)
         self.logout_btn.clicked.connect(self.logout)
 
-    # ===== Socket / Logic (unchanged) =====
+    # ===== SOCKET / LOGIC =====
     def connect_socket(self):
-        if self._socket_initialized: return
+        if self._socket_initialized: 
+            return
         self._socket_initialized = True
 
         def _connect():
@@ -136,8 +217,9 @@ class HomePage(QWidget):
     def update_online_list(self):
         self.online_list.clear()
         for uid in self.online_users.keys():
-            item = QListWidgetItem(f"User {uid}")
+            item = QListWidgetItem(f"🟢 User {uid}")
             item.setData(Qt.UserRole, uid)
+            item.setForeground(QColor("#2f9e44"))
             self.online_list.addItem(item)
 
     def refresh_chats(self):
@@ -145,27 +227,42 @@ class HomePage(QWidget):
         self.chat_list.clear()
         if status == 200:
             for c in chats:
-                text = f"[{c['chat_id']}] {c['name']}"
+                text = f"{c['name']}"
                 item = QListWidgetItem(text)
                 item.setData(Qt.UserRole, c["chat_id"])
                 self.chat_list.addItem(item)
 
     def on_chat_clicked(self, item):
+        # chat_id = item.data(Qt.UserRole)
+        # self.parent.chat_page.load_chat(chat_id)
+        # self.parent.layout.setCurrentWidget(self.parent.chat_page)
+
         chat_id = item.data(Qt.UserRole)
-        self.parent.chat_page.load_chat(chat_id)
-        self.parent.layout.setCurrentWidget(self.parent.chat_page)
+        # Ẩn placeholder, hiện chat_page
+        self.placeholder.hide()
+        self.chat_page.show()
+        self.chat_page.load_chat(chat_id)
+        # Lưu trạng thái hiện tại
+        self.parent.current_chat_id = chat_id
 
     def start_chat_with_user(self, item):
         uid = item.data(Qt.UserRole)
         if uid == self.parent.user_id:
             return
-        status, chat = api_client.create_chat(self.parent.token, name=f"Chat with {uid}", is_group=False, members=[uid])
+        status, chat = api_client.create_chat(
+            self.parent.token, 
+            name=f"Chat with {uid}", 
+            is_group=False, 
+            members=[uid]
+        )
         if status in (200, 201):
             self.parent.chat_page.load_chat(chat["chat_id"])
             self.parent.layout.setCurrentWidget(self.parent.chat_page)
 
     def logout(self):
-        try: sio.disconnect()
-        except: pass
+        try: 
+            sio.disconnect()
+        except: 
+            pass
         api_client.logout(self.parent.token)
         self.parent.layout.setCurrentWidget(self.parent.login_page)
