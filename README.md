@@ -14,8 +14,6 @@
   - **Cài đặt môi trường:**
     1. Tạo môi trường ảo:
 
-      **Windows:**
-
       ```bash
       python -m venv venv
       ```
@@ -29,8 +27,6 @@
     3. Chạy server Flask:
 
       ```bash
-      py run.py
-      # hoặc
       python run.py
       ```
 
