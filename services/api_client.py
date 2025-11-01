@@ -1,3 +1,4 @@
+# services/api_client.py
 import requests
 import json
 
@@ -17,7 +18,8 @@ def _request(method, endpoint, token=None, json_data=None, params=None):
             data = r.json()
         except json.JSONDecodeError:
             data = {"msg": r.text}
-        print(f"[DEBUG] Response: {data}")
+        # Bỏ log response data để đỡ rối
+        # print(f"[DEBUG] Response: {data}") 
         return r.status_code, data
     except requests.exceptions.RequestException as e:
         print(f"[ERROR] Request failed: {e}")
@@ -90,6 +92,11 @@ def get_chats(token):
 def get_chat_detail(token, chat_id):
     print(f"[DEBUG] Getting chat detail for chat_id={chat_id}")
     return _request("GET", f"/chats/{chat_id}", token=token)
+
+# <--- SỬA ĐỔI: THÊM HÀM MỚI NÀY --->
+def mark_chat_read(token, chat_id):
+    print(f"[DEBUG] Marking chat {chat_id} as read")
+    return _request("POST", f"/chats/{chat_id}/mark_read", token=token)
 
 def add_member(token, chat_id, member_id):
     print(f"[DEBUG] Adding member {member_id} to chat {chat_id}")

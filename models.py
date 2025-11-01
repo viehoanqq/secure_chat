@@ -1,3 +1,4 @@
+# models.py
 from app import db
 from datetime import datetime
 
@@ -100,6 +101,9 @@ class MessageRecipient(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     message_id = db.Column(db.Integer, db.ForeignKey("messages.id", ondelete="CASCADE"), nullable=False)
     receiver_id = db.Column(db.Integer, db.ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False)
+
+    # <--- SỬA ĐỔI: Thêm trường này
+    read_at = db.Column(db.DateTime, nullable=True, default=None)
 
     message = db.relationship("Message", back_populates="recipients")
     receiver = db.relationship("Account", back_populates="received_messages")

@@ -1,3 +1,4 @@
+# services/crypto_client.py
 import base64
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP, AES
@@ -6,7 +7,7 @@ from Crypto.Hash import SHA256
 from Crypto.Random import get_random_bytes
 import json
 import os
-from services import api_client  # để gọi register/login/get_user_info
+from services import api_client # để gọi register/login/get_user_info
 
 # -----------------------------
 # Key generation
@@ -100,10 +101,21 @@ def load_private_key(username: str, password: str) -> str:
 # -----------------------------
 # Register + save keys
 # -----------------------------
-def register_and_save_key(username: str, password: str):
+def register_and_save_key(username: str, password: str, full_name: str = None, gender: str = None, date_of_birth: str = None):
     private_pem, public_pem = generate_rsa_keypair()
-    status, data = api_client.register(username, password, public_pem)
+    
+    # <--- SỬA Ở ĐÂY
+    status, data = api_client.register(
+        username, 
+        password, 
+        public_pem,
+        full_name=full_name,
+        gender=gender,
+        date_of_birth=date_of_birth
+    )
+    
     if status != 201:
         raise Exception(f"Register failed: {data.get('msg')}")
+    
     save_private_key(username, private_pem, password)
     return private_pem, public_pem

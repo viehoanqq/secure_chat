@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th10 31, 2025 lúc 10:41 AM
+-- Thời gian đã tạo: Th10 01, 2025 lúc 03:06 PM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.0.30
 
@@ -28,7 +28,7 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `accounts` (
-  `id` int(11) NOT NULL,  
+  `id` int(11) NOT NULL,
   `username` varchar(80) NOT NULL,
   `password_hash` varchar(200) NOT NULL,
   `public_key` text NOT NULL,
@@ -36,6 +36,14 @@ CREATE TABLE `accounts` (
   `last_seen` datetime DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `accounts`
+--
+
+INSERT INTO `accounts` (`id`, `username`, `password_hash`, `public_key`, `status`, `last_seen`, `created_at`) VALUES
+(1, 'admin', 'scrypt:32768:8:1$EHzc6AVxGvfbzl3X$0a2bed853e401959750e66c2f7fe4bc09ba4b6bce58405c13ecf27b9f282b51ce424060ae025a16deacefe3cbdc9115418a7d3ca854231c42a490d3e713142c6', '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvgseqn4RJr0SNLpN4B8R\np1aldfuK+EPjKHoQD8DhY1HsbJP038U8HUlqMf8a/xQScBYTJLZutEdRFOYyBgYB\nvgK4K5zwICzP7h8rFcdnAcKy0rqzPYwfhwpINeS7QKRjWmQgb7VBK9ARmzcKxf/4\nUWl37gIRdUNI6peynslRcZc/UzIilL5ix8Dd5aHYCqNnpyAyVYBUEEvk9eZevyev\nzJLUzl4HS0WdoeP7GBvoaTu5eQmB1/OD/RSnyvM4jhRD6ht6rY338CYX5aVrKmHc\nMhTgDkD4RYuqskH0vhp+VmfvHDJgIwoaPKTdpSVy/usOHLp5TYtQJGAWWBgR/wMZ\npwIDAQAB\n-----END PUBLIC KEY-----', 'online', '2025-11-01 14:05:46', '2025-11-01 14:05:40'),
+(2, 'test', 'scrypt:32768:8:1$jDwp4IBFh3jSFvDU$b4086aaff6a9adc3ae4c4ed05ce9591e16a04d20a69e2b6f067c5ea2de8f322acb96ac76f0c84b197faef14b697d4ecf402c873f3fc83fedd27b31fcd9f5c5f2', '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0dUbNFG6oflC+3WomQf4\n5v8JOi5k716KUg6i2VcCMLbMqwHEscyX+zIm4OK6q/9za9rtvTwFoP/UUlS2zIZQ\nPmlM7UcQ4jjz4dZwQQVyyXZmFpEezvqGRnNkQtIxdEtGCk8tmackuOn3zwJHC4o5\nJNCrSZWsIFFqJr0YyzgWw9iWNIUuyBLCn+1JhrNHYOuIGgwKgUje5CqV3200WJnC\nnousokqXE0mRx+cl21umQ0aHvsxGv+j4fF/rjul2zBiEdGBxXxXe2tX8xVZ+y+Hn\ndmXKSp6XejtgNmJWkJ67qKYrfFK4xPH3LkJ+qr2kkS33kO3LZCGBc44irjj9Ukpn\nuwIDAQAB\n-----END PUBLIC KEY-----', 'online', '2025-11-01 14:06:18', '2025-11-01 14:06:11');
 
 -- --------------------------------------------------------
 
@@ -50,6 +58,13 @@ CREATE TABLE `chats` (
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `chats`
+--
+
+INSERT INTO `chats` (`id`, `name`, `is_group`, `created_at`) VALUES
+(1, 'nguyen viet hoang', 0, '2025-11-01 14:06:22');
+
 -- --------------------------------------------------------
 
 --
@@ -62,6 +77,14 @@ CREATE TABLE `chat_members` (
   `account_id` int(11) NOT NULL,
   `joined_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `chat_members`
+--
+
+INSERT INTO `chat_members` (`id`, `chat_id`, `account_id`, `joined_at`) VALUES
+(1, 1, 2, '2025-11-01 14:06:22'),
+(2, 1, 1, '2025-11-01 14:06:22');
 
 -- --------------------------------------------------------
 
@@ -80,6 +103,14 @@ CREATE TABLE `messages` (
   `timestamp` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `messages`
+--
+
+INSERT INTO `messages` (`id`, `chat_id`, `sender_id`, `content`, `aes_key_encrypted`, `iv`, `tag`, `timestamp`) VALUES
+(1, 1, 2, '0KY=', '{\"2\": \"NWzyJDvoWgsRZg3r+b/2+OH8RsJ2BTDFQda/epJSvfwp8HG7ljLGDHxNQB5dm4ZNAR80IRPURL5qwkyVAf2hnQDskObzv6++mr5FNUciiHhbCHnWppU3EcHcWkotq0OD+RtJw9lbYoO+jQsYhrK1CXIFagTeQDDTTXaNMfFp76SUyticXZt03cxcgJQEp9dnCV/RmP24ZffWRNkMdDFt3n2btpFkaeyjnD3HlWxh7WVf6uKk7GNSn4Mg48mGgt7sDZP8D737H6+F8otC/eCfV+IOgqAf0zxj+QUgURp4dnGhph11xsAYzxe+JCdGiClDe1dzbs361ubiAZP+BKiBtg==\", \"1\": \"rKuT+pIvW1dPSVfKtGbWaNAReUg2uE+1NVIWNMI1+DqafldIQVXspndufQkp+YfKHuAtq0JwAKRaeE1WI9N5VzAwBga6CUOEFoIy4vEMcE8gqz5bKSy6rfuN1SVt5HToApuMiTreqQ0sDNz1OBRiathPiXJ2agUPDMnddgLRmy/FF+OUvijjJ7G2SongqduLqpH30xPwBdS7y96HEkjiQp76YEFVpEwjO7ErViadQcrq7YvxGQhXL739hiIVrv3VH1trmTDcmjDVQglgDqwFh2ycrCSmKh6exRUN4brBRhR0ktbscezoZOy1tJDRsVXrfwXQsyq2BTK9fHqcnz+FNQ==\"}', '4WzXpgSB6FoRBYtXiRwJRg==', '7ybhA5AaCaGrS/NROy5f9Q==', '2025-11-01 14:06:27'),
+(2, 1, 1, 'Mmg=', '{\"2\": \"NYW+dt79SHWeFLicfFiI0CaNL3EtI9qd7ddB1MD1odlIIudLJ6NwTsuFMzUJoblNUm7kKs8qB/d5voH6NqlDuG17xIT95+Mtedg57Tqw5Re7m17IDenxzh6qweaFilnDVxDdz3JPuKo7m5n7NWTj/tCDIgC0iBltwv0REpF1zvklIGtDISKh7Fw+Y5YY0Vvr7TMLcVMGSK+tXQ1w6/qBDPb7bvC0j2ru104GpjJh5/izDgQ7afOasUFnHsfwpSEoqhS3sjgbqqhBrykXFI8qGwdvEwGgO2TioHEthPEZWEeDsIm0jfYGTMxcLD3Ev1HXKC0Ru8sI6cFUlNsHqKkhNg==\", \"1\": \"a8ks+1uvWqGWa7QUTl+5wfDf6aF5/3Ta5Yd2vJUgLpXJYbEslIf7NllKv6P00SIGH8fYmMAUFBtBPBKk1EcQjz1nPy/N5QE4elYArbyVNH45mPWzfaHXWXsrO+1imTDjqtlIhY4vA7DtjDTJiQiW5FRfuzvMhUO1cz+IG4nhTS8/OU9CUOkPirNWeSEN1Teh2emPtWbYu+YKWdWCIMYMvFOs2oxNwtcw3w564lOnMQ5QWsWnMe+XsI4GuS4bWgy/SInxrfvbG3cbNp1fbZq5+qDllizHqwyMhgP4btthL0bljPGWLfnDMSHAuXH4AH+hqDRcFzh6T1V1kaZXKqLW6A==\"}', 'GJcR8s8O+OmZj4ddIEy31w==', 'CIlGhFo/VeCH27hmnELiYg==', '2025-11-01 14:06:34');
+
 -- --------------------------------------------------------
 
 --
@@ -89,8 +120,19 @@ CREATE TABLE `messages` (
 CREATE TABLE `message_recipients` (
   `id` int(11) NOT NULL,
   `message_id` int(11) NOT NULL,
-  `receiver_id` int(11) NOT NULL
+  `receiver_id` int(11) NOT NULL,
+  `read_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `message_recipients`
+--
+
+INSERT INTO `message_recipients` (`id`, `message_id`, `receiver_id`, `read_at`) VALUES
+(1, 1, 2, NULL),
+(2, 1, 1, '2025-11-01 14:06:32'),
+(3, 2, 2, '2025-11-01 14:06:34'),
+(4, 2, 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -107,6 +149,14 @@ CREATE TABLE `users` (
   `avatar_url` varchar(255) DEFAULT NULL,
   `bio` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `users`
+--
+
+INSERT INTO `users` (`id`, `account_id`, `full_name`, `gender`, `date_of_birth`, `avatar_url`, `bio`) VALUES
+(1, 1, 'nguyen viet hoang', 'other', '2007-11-01', NULL, NULL),
+(2, 2, 'test', 'other', '2007-11-01', NULL, NULL);
 
 --
 -- Chỉ mục cho các bảng đã đổ
@@ -164,37 +214,37 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT cho bảng `accounts`
 --
 ALTER TABLE `accounts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT cho bảng `chats`
 --
 ALTER TABLE `chats`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT cho bảng `chat_members`
 --
 ALTER TABLE `chat_members`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT cho bảng `messages`
 --
 ALTER TABLE `messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT cho bảng `message_recipients`
 --
 ALTER TABLE `message_recipients`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT cho bảng `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Các ràng buộc cho các bảng đã đổ
