@@ -1,162 +1,115 @@
-# info_panel.py
+import os
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
     QFrame, QScrollArea
 )
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QIcon
 from services import api_client
 
 class InfoPanel(QWidget):
     def __init__(self, parent_app):
         super().__init__()
-        self.parent_app = parent_app # Đây là ChatApp (root)
+        self.parent_app = parent_app
         self.current_user_id = None
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        self.assets_path = os.path.join(current_dir, "assets")
         self.init_ui()
 
+    def get_icon(self, name):
+        path = os.path.join(self.assets_path, name)
+        if os.path.exists(path): return QIcon(path)
+        return QIcon()
+
     def init_ui(self):
-        self.setFixedWidth(300)
+        self.setFixedWidth(340)
         self.setStyleSheet("""
             QWidget {
-                background-color: #f7f9fa;
-                border-left: 1px solid #e0e0e0;
-                font-family: 'Segoe UI', 'Inter', sans-serif;
-            }
-            QLabel {
-                border: none;
-                background-color: transparent;
+                background-color: #F7F9FA;
+                border-left: 1px solid #CFD8DC;
+                font-family: 'Segoe UI', sans-serif;
+                font-size: 18px; /* Font to */
             }
             QFrame#header {
-                border-bottom: 1px solid #e0e0e0;
-                background-color: #ffffff;
+                background-color: #FFFFFF;
+                border-bottom: 1px solid #CFD8DC;
             }
-            QLabel#header_title {
-                font-size: 16px;
-                font-weight: 600;
-                color: #111;
-            }
-            QPushButton#close_btn {
-                font-size: 18px;
-                font-weight: 700;
-                color: #777;
-                border: none;
-                background: transparent;
-                padding: 5px;
-            }
-            QPushButton#close_btn:hover {
-                color: #111;
-            }
-            QLabel#avatar {
-                font-size: 60px;
-                qproperty-alignment: 'AlignCenter';
-                padding: 20px;
-            }
-            QLabel#full_name {
-                font-size: 18px;
-                font-weight: 600;
-                color: #111;
-                qproperty-alignment: 'AlignCenter';
-            }
-            QLabel#username {
-                font-size: 14px;
-                color: #777;
-                qproperty-alignment: 'AlignCenter';
-                margin-bottom: 15px;
-            }
-            QFrame#separator {
-                background-color: #e0e0e0;
-                min-height: 1px;
-                max-height: 1px;
-            }
+            QLabel#header_title { font-weight: bold; font-size: 18px; color: #263238; }
+            QLabel#full_name { font-weight: bold; font-size: 24px; margin-top: 20px; color: #1E88E5; }
+            QLabel#username { color: #546E7A; margin-bottom: 25px; font-size: 16px; }
+            QPushButton#close_btn { background: transparent; border: none; }
         """)
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
 
         # Header
-        header_frame = QFrame()
-        header_frame.setObjectName("header")
-        header_frame.setFixedHeight(60)
-        header_layout = QHBoxLayout(header_frame)
-        header_layout.setContentsMargins(15, 0, 10, 0)
+        header = QFrame()
+        header.setObjectName("header")
+        header.setFixedHeight(80)
+        h_layout = QHBoxLayout(header)
         
-        self.header_title = QLabel("Thông tin")
+        self.header_title = QLabel("Thông tin liên hệ")
         self.header_title.setObjectName("header_title")
         
-        self.close_btn = QPushButton("❌")
+        self.close_btn = QPushButton()
         self.close_btn.setObjectName("close_btn")
-        self.close_btn.setFixedSize(32, 32)
+        self.close_btn.setIcon(self.get_icon("close.png"))
         self.close_btn.setCursor(Qt.PointingHandCursor)
-        # Nút close sẽ được kết nối từ home_page
         
-        header_layout.addWidget(self.header_title)
-        header_layout.addStretch()
-        header_layout.addWidget(self.close_btn)
-        main_layout.addWidget(header_frame)
+        h_layout.addWidget(self.header_title)
+        h_layout.addStretch()
+        h_layout.addWidget(self.close_btn)
+        main_layout.addWidget(header)
 
-        # Content Area
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setStyleSheet("QScrollArea { border: none; }")
+        # Content
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("border: none;")
         
-        content_widget = QWidget()
-        content_layout = QVBoxLayout(content_widget)
-        content_layout.setContentsMargins(20, 20, 20, 20)
-        content_layout.setSpacing(10)
-        content_layout.setAlignment(Qt.AlignTop)
-
-        # Profile Info
-        self.avatar_label = QLabel("👤")
-        self.avatar_label.setObjectName("avatar")
+        content = QWidget()
+        c_layout = QVBoxLayout(content)
+        c_layout.setAlignment(Qt.AlignTop)
+        c_layout.setContentsMargins(30, 30, 30, 30)
         
-        self.full_name_label = QLabel("...")
+        self.avatar_label = QLabel()
+        self.avatar_label.setAlignment(Qt.AlignCenter)
+        pix = self.get_icon("user.png").pixmap(100, 100)
+        self.avatar_label.setPixmap(pix)
+        
+        self.full_name_label = QLabel("Đang tải...")
         self.full_name_label.setObjectName("full_name")
+        self.full_name_label.setAlignment(Qt.AlignCenter)
         
         self.username_label = QLabel("@...")
         self.username_label.setObjectName("username")
+        self.username_label.setAlignment(Qt.AlignCenter)
         
-        content_layout.addWidget(self.avatar_label)
-        content_layout.addWidget(self.full_name_label)
-        content_layout.addWidget(self.username_label)
+        lbl_bio = QLabel("Giới thiệu:")
+        lbl_bio.setStyleSheet("font-weight: bold; margin-top: 15px;")
         
-        # Separator
-        separator = QFrame()
-        separator.setObjectName("separator")
-        content_layout.addWidget(separator)
-        
-        # Các thông tin khác (đang chờ)
-        self.bio_label = QLabel("...")
+        self.bio_label = QLabel("")
         self.bio_label.setWordWrap(True)
-        self.bio_label.setStyleSheet("font-size: 13px; color: #333; margin-top: 15px;")
-        content_layout.addWidget(self.bio_label)
+        self.bio_label.setStyleSheet("color: #37474F; background: white; padding: 15px; border-radius: 10px;")
         
-        # Shared Media (Placeholder)
-        media_label = QLabel("Shared Media")
-        media_label.setStyleSheet("font-size: 15px; font-weight: 600; margin-top: 20px;")
-        content_layout.addWidget(media_label)
+        c_layout.addWidget(self.avatar_label)
+        c_layout.addWidget(self.full_name_label)
+        c_layout.addWidget(self.username_label)
+        c_layout.addWidget(lbl_bio)
+        c_layout.addWidget(self.bio_label)
         
-        media_placeholder = QLabel("Không có media chia sẻ.")
-        media_placeholder.setStyleSheet("font-size: 13px; color: #777;")
-        content_layout.addWidget(media_placeholder)
-
-        scroll_area.setWidget(content_widget)
-        main_layout.addWidget(scroll_area)
+        scroll.setWidget(content)
+        main_layout.addWidget(scroll)
 
     def load_user_info(self, user_id):
-        if not user_id or user_id == self.current_user_id:
-            return # Không tải lại nếu vẫn là user đó
-
+        if not user_id: return
         self.current_user_id = user_id
         token = self.parent_app.token
-        
         status, data = api_client.get_user_info(token, user_id)
         if status == 200:
-            self.full_name_label.setText(data.get("full_name") or "Không có tên")
+            self.full_name_label.setText(data.get("full_name", "Không có tên"))
             self.username_label.setText(f"@{data.get('username')}")
-            self.bio_label.setText(data.get('bio') or "Không có tiểu sử.")
-            self.header_title.setText(f"Thông tin User {user_id}")
+            self.bio_label.setText(data.get("bio", "Chưa có giới thiệu."))
         else:
-            self.full_name_label.setText("Không thể tải")
-            self.username_label.setText("@error")
-            self.bio_label.setText("")
+            self.full_name_label.setText("Lỗi")
+            self.bio_label.setText("Không thể tải thông tin.")

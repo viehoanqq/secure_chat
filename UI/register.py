@@ -1,132 +1,134 @@
-# register_page.py
+import os
+import threading
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton,
-    QHBoxLayout, QFrame, QGraphicsDropShadowEffect, QComboBox, QDateEdit, QMessageBox
+    QHBoxLayout, QFrame, QGraphicsDropShadowEffect, QComboBox, QDateEdit
 )
 from PyQt5.QtCore import Qt, QDate
-from PyQt5.QtGui import QColor, QFont
-import threading
-from services import crypto_client # Chúng ta chỉ cần crypto_client ở đây
+from PyQt5.QtGui import QColor, QIcon
+from services import crypto_client
 
 class RegisterPage(QWidget):
     def __init__(self, parent):
         super().__init__()
         self.parent = parent
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        self.assets_path = os.path.join(current_dir, "assets")
         self.init_ui()
+
+    def get_icon(self, name):
+        path = os.path.join(self.assets_path, name)
+        if os.path.exists(path): return QIcon(path)
+        return QIcon()
 
     def init_ui(self):
         self.setStyleSheet("""
             QWidget {
-                background-color: #f0f2f5;
-                color: #222;
-                font-family: 'Segoe UI', 'Inter', sans-serif;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #E3F2FD, stop:1 #BBDEFB);
+                font-family: 'Segoe UI', sans-serif;
+                font-size: 18px; /* Font to */
             }
             QFrame#container {
-                background-color: #ffffff;
-                border-radius: 12px;
-                border: 1px solid #e0e0e0;
+                background-color: #FFFFFF;
+                border-radius: 20px;
             }
-            QLabel { color: #222; }
             QLabel#title {
-                color: #0088cc;
-                font-size: 28px;
-                font-weight: 700;
-                margin-bottom: 20px;
+                color: #1565C0; font-size: 38px; font-weight: bold; margin-bottom: 15px;
             }
             QLineEdit, QComboBox, QDateEdit {
-                background-color: #f0f2f5;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                padding: 11px 14px;
-                color: #111;
-                font-size: 14px;
-                min-height: 22px; /* 11+11+22 = 44px total */
+                background-color: #F5F7FA;
+                border: 1px solid #CFD8DC;
+                border-radius: 12px;
+                padding: 14px 14px 14px 45px;
+                font-size: 18px;
+                color: #37474F;
+                min-height: 28px;
             }
             QLineEdit:focus, QComboBox:focus, QDateEdit:focus {
-                border: 2px solid #0088cc;
-                padding: 10px 13px;
-                background-color: #ffffff;
+                border: 2px solid #1E88E5; background-color: #FFFFFF;
             }
-            QComboBox::drop-down { border: none; }
-            QComboBox::down-arrow { image: none; } /* Tùy chỉnh nếu muốn */
-            
             QPushButton#primary {
-                background-color: #0088cc;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                padding: 12px 16px;
-                font-weight: bold;
-                font-size: 15px;
+                background-color: #1E88E5; color: white; border: none; border-radius: 12px;
+                padding: 16px; font-weight: bold; font-size: 18px;
             }
-            QPushButton#primary:hover { background-color: #0099ee; }
-            
+            QPushButton#primary:hover { background-color: #1976D2; }
             QPushButton#secondary {
-                background-color: transparent;
-                color: #0088cc;
-                border: none;
-                font-weight: 600;
-                font-size: 14px;
-                padding: 8px;
+                background-color: transparent; color: #546E7A; border: none;
+                font-weight: 600; font-size: 16px;
             }
-            QPushButton#secondary:hover { color: #0099ee; }
+            QPushButton#secondary:hover { color: #1E88E5; }
         """)
 
         main_layout = QVBoxLayout(self)
         main_layout.setAlignment(Qt.AlignCenter)
 
-        # Form container
         container = QFrame()
         container.setObjectName("container")
-        container.setMinimumWidth(400)
-        container.setMaximumWidth(400)
+        container.setFixedWidth(550)
         
         shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(30)
+        shadow.setBlurRadius(40)
         shadow.setColor(QColor(0, 0, 0, 40))
-        shadow.setOffset(0, 4)
+        shadow.setOffset(0, 10)
         container.setGraphicsEffect(shadow)
 
         form_layout = QVBoxLayout(container)
-        form_layout.setSpacing(14)
-        form_layout.setContentsMargins(30, 30, 30, 30)
+        form_layout.setSpacing(25)
+        form_layout.setContentsMargins(50, 50, 50, 50)
 
-        title = QLabel("Tạo tài khoản")
+        title = QLabel("Đăng Ký Tài Khoản")
         title.setObjectName("title")
         title.setAlignment(Qt.AlignCenter)
         form_layout.addWidget(title)
 
-        # Form fields
-        self.username_input = QLineEdit(placeholderText="Tên đăng nhập")
-        self.password_input = QLineEdit(placeholderText="Mật khẩu", echoMode=QLineEdit.Password)
-        self.confirm_password_input = QLineEdit(placeholderText="Xác nhận mật khẩu", echoMode=QLineEdit.Password)
-        self.full_name_input = QLineEdit(placeholderText="Họ và tên")
+        # Inputs
+        self.username_input = QLineEdit()
+        self.username_input.setPlaceholderText("Tên đăng nhập")
+        self.username_input.addAction(self.get_icon("user.png"), QLineEdit.LeadingPosition)
+        
+        self.password_input = QLineEdit()
+        self.password_input.setPlaceholderText("Mật khẩu")
+        self.password_input.setEchoMode(QLineEdit.Password)
+        self.password_input.addAction(self.get_icon("lock.png"), QLineEdit.LeadingPosition)
+        
+        self.confirm_password_input = QLineEdit()
+        self.confirm_password_input.setPlaceholderText("Nhập lại mật khẩu")
+        self.confirm_password_input.setEchoMode(QLineEdit.Password)
+        self.confirm_password_input.addAction(self.get_icon("lock.png"), QLineEdit.LeadingPosition)
+        
+        self.full_name_input = QLineEdit()
+        self.full_name_input.setPlaceholderText("Họ và tên")
+        self.full_name_input.addAction(self.get_icon("user.png"), QLineEdit.LeadingPosition)
+
+        row_layout = QHBoxLayout()
+        row_layout.setSpacing(15)
         
         self.gender_input = QComboBox()
-        self.gender_input.addItems(["Other", "Male", "Female"])
+        self.gender_input.addItems(["Khác", "Nam", "Nữ"])
+        self.gender_input.setStyleSheet("padding-left: 15px;") 
         
         self.dob_input = QDateEdit(calendarPopup=True)
         self.dob_input.setDisplayFormat("yyyy-MM-dd")
-        self.dob_input.setDate(QDate.currentDate().addYears(-18)) # Gợi ý
-        self.dob_input.setMaximumDate(QDate.currentDate())
+        self.dob_input.setDate(QDate.currentDate().addYears(-18))
+        self.dob_input.setStyleSheet("padding-left: 15px;")
+
+        row_layout.addWidget(self.gender_input)
+        row_layout.addWidget(self.dob_input)
 
         form_layout.addWidget(self.username_input)
         form_layout.addWidget(self.password_input)
         form_layout.addWidget(self.confirm_password_input)
         form_layout.addWidget(self.full_name_input)
-        form_layout.addWidget(self.gender_input)
-        form_layout.addWidget(QLabel("Ngày sinh:"))
-        form_layout.addWidget(self.dob_input)
+        form_layout.addLayout(row_layout)
 
         form_layout.addSpacing(15)
-        
-        self.register_btn = QPushButton("Đăng Ký")
+
+        self.register_btn = QPushButton("ĐĂNG KÝ")
         self.register_btn.setObjectName("primary")
-        self.register_btn.setMinimumHeight(44)
         self.register_btn.setCursor(Qt.PointingHandCursor)
         form_layout.addWidget(self.register_btn)
 
-        self.back_btn = QPushButton("Quay lại Đăng nhập")
+        self.back_btn = QPushButton("Đã có tài khoản? Đăng nhập ngay")
         self.back_btn.setObjectName("secondary")
         self.back_btn.setCursor(Qt.PointingHandCursor)
         form_layout.addWidget(self.back_btn)
@@ -137,7 +139,6 @@ class RegisterPage(QWidget):
 
         main_layout.addWidget(container)
 
-        # Connect actions
         self.register_btn.clicked.connect(self.do_register)
         self.back_btn.clicked.connect(self.go_to_login)
 
@@ -145,8 +146,8 @@ class RegisterPage(QWidget):
         self.parent.layout.setCurrentWidget(self.parent.login_page)
 
     def show_message(self, message, error=True):
-        color = "#D32F2F" if error else "#0088cc"
-        self.message_label.setStyleSheet(f"color: {color}; font-size: 14px; font-weight: 500; margin-top: 10px;")
+        color = "#D32F2F" if error else "#1E88E5"
+        self.message_label.setStyleSheet(f"color: {color}; font-size: 16px; font-weight: 600; margin-top: 5px;")
         self.message_label.setText(message)
 
     def do_register(self):
@@ -154,11 +155,12 @@ class RegisterPage(QWidget):
         password = self.password_input.text().strip()
         confirm_password = self.confirm_password_input.text().strip()
         full_name = self.full_name_input.text().strip()
-        gender = self.gender_input.currentText().lower()
+        gender_map = {"Nam": "male", "Nữ": "female", "Khác": "other"}
+        gender = gender_map.get(self.gender_input.currentText(), "other")
         dob = self.dob_input.date().toString("yyyy-MM-dd")
 
         if not all([username, password, confirm_password, full_name]):
-            self.show_message("Vui lòng điền tất cả các trường.", error=True)
+            self.show_message("Vui lòng điền đầy đủ thông tin.", error=True)
             return
         
         if password != confirm_password:
@@ -166,27 +168,20 @@ class RegisterPage(QWidget):
             return
 
         self.register_btn.setEnabled(False)
-        self.show_message("Đang xử lý...", error=False)
+        self.show_message("Đang tạo tài khoản...", error=False)
 
-        # Chạy trong thread để không block UI
         def register_thread():
             try:
-                # Gọi crypto_client với các trường mới
                 crypto_client.register_and_save_key(
-                    username, 
-                    password, 
-                    full_name=full_name, 
-                    gender=gender, 
-                    date_of_birth=dob
+                    username, password, full_name=full_name, gender=gender, date_of_birth=dob
                 )
-                self.show_message("Đăng ký thành công! Quay lại để đăng nhập.", error=False)
-                # Xóa form
+                self.show_message("Đăng ký thành công!", error=False)
                 self.username_input.clear()
                 self.password_input.clear()
                 self.confirm_password_input.clear()
                 self.full_name_input.clear()
             except Exception as e:
-                self.show_message(f"Đăng ký thất bại: {str(e)}", error=True)
+                self.show_message(f"Lỗi đăng ký: {str(e)}", error=True)
             finally:
                 self.register_btn.setEnabled(True)
         

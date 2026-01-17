@@ -1,158 +1,111 @@
-# profile_page.py
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QFormLayout, QLineEdit, QComboBox, 
-    QDateEdit, QTextEdit, QPushButton, QLabel, QMessageBox, QDialogButtonBox
+    QDateEdit, QTextEdit, QMessageBox, QDialogButtonBox
 )
 from PyQt5.QtCore import Qt, QDate
-from PyQt5.QtGui import QFont
 from services import api_client
 
 class ProfilePage(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
-        # parent ở đây là ChatApp (self.parent.parent từ HomePage)
         self.parent_app = parent 
-        
-        self.setWindowTitle("Thông tin cá nhân")
-        self.setMinimumSize(450, 400)
+        self.setWindowTitle("Chỉnh sửa hồ sơ")
+        self.setMinimumSize(500, 550)
         self.init_ui()
         self.load_profile_data()
 
     def init_ui(self):
         self.setStyleSheet("""
             QDialog {
-                background-color: #ffffff;
-                font-family: 'Segoe UI', 'Inter', sans-serif;
-            }
-            QLabel {
-                font-size: 14px;
-                color: #333;
-                padding-top: 5px;
+                background-color: #FFFFFF;
+                font-family: 'Segoe UI';
+                font-size: 18px; /* Font to */
             }
             QLineEdit, QComboBox, QDateEdit, QTextEdit {
-                background-color: #f0f2f5;
-                border: 1px solid #ddd;
+                background-color: #FAFAFA;
+                border: 1px solid #CFD8DC;
                 border-radius: 8px;
-                padding: 10px 12px;
-                color: #111;
-                font-size: 14px;
-                min-height: 24px;
-            }
-            QLineEdit:focus, QComboBox:focus, QDateEdit:focus, QTextEdit:focus {
-                border: 2px solid #0088cc;
-                padding: 9px 11px;
-                background-color: #ffffff;
-            }
-            QLineEdit#username {
-                background-color: #e7ebee;
-                color: #555;
+                padding: 12px;
             }
             QPushButton {
-                background-color: #0088cc;
+                background-color: #1E88E5;
                 color: white;
-                border: none;
                 border-radius: 8px;
-                padding: 11px 16px;
+                padding: 12px 24px;
                 font-weight: bold;
-                font-size: 14px;
             }
-            QPushButton:hover { background-color: #0099ee; }
+            QPushButton:hover { background-color: #1976D2; }
         """)
         
         layout = QVBoxLayout(self)
-        layout.setSpacing(15)
+        layout.setContentsMargins(30, 30, 30, 30)
+        layout.setSpacing(25)
 
-        form_layout = QFormLayout()
-        form_layout.setSpacing(10)
-        form_layout.setLabelAlignment(Qt.AlignRight)
-
-        # Fields
+        form = QFormLayout()
+        form.setLabelAlignment(Qt.AlignRight)
+        
         self.username_label = QLineEdit()
-        self.username_label.setObjectName("username")
         self.username_label.setReadOnly(True)
+        self.username_label.setStyleSheet("background-color: #ECEFF1; color: #546E7A;")
         
         self.full_name_input = QLineEdit()
-        self.bio_input = QTextEdit()
-        self.bio_input.setPlaceholderText("Giới thiệu về bạn...")
-        self.bio_input.setFixedHeight(80)
-
         self.gender_input = QComboBox()
-        self.gender_input.addItems(["other", "male", "female"])
+        self.gender_input.addItems(["Khác", "Nam", "Nữ"])
         
         self.dob_input = QDateEdit(calendarPopup=True)
         self.dob_input.setDisplayFormat("yyyy-MM-dd")
-        self.dob_input.setMaximumDate(QDate.currentDate())
-
-        form_layout.addRow(QLabel("Tên đăng nhập:"), self.username_label)
-        form_layout.addRow(QLabel("Họ và tên:"), self.full_name_input)
-        form_layout.addRow(QLabel("Giới tính:"), self.gender_input)
-        form_layout.addRow(QLabel("Ngày sinh:"), self.dob_input)
-        form_layout.addRow(QLabel("Tiểu sử:"), self.bio_input)
         
-        layout.addLayout(form_layout)
+        self.bio_input = QTextEdit()
+        self.bio_input.setFixedHeight(120)
+        self.bio_input.setPlaceholderText("Giới thiệu bản thân...")
 
-        # Buttons
-        self.button_box = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
-        self.button_box.accepted.connect(self.save_profile)
-        self.button_box.rejected.connect(self.reject)
+        form.addRow("Tên đăng nhập:", self.username_label)
+        form.addRow("Họ và tên:", self.full_name_input)
+        form.addRow("Giới tính:", self.gender_input)
+        form.addRow("Ngày sinh:", self.dob_input)
+        form.addRow("Tiểu sử:", self.bio_input)
         
-        # Style các nút
-        self.button_box.button(QDialogButtonBox.Save).setStyleSheet("background-color: #0088cc;")
-        self.button_box.button(QDialogButtonBox.Cancel).setStyleSheet(
-            "background-color: #e7ebee; color: #333;"
-        )
+        layout.addLayout(form)
 
-        layout.addWidget(self.button_box)
+        btns = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
+        btns.button(QDialogButtonBox.Save).setText("Lưu")
+        btns.button(QDialogButtonBox.Cancel).setText("Hủy")
+        btns.accepted.connect(self.save_profile)
+        btns.rejected.connect(self.reject)
+        layout.addWidget(btns)
 
     def load_profile_data(self):
         token = self.parent_app.token
         user_id = self.parent_app.user_id
-
-        if not token or not user_id:
-            QMessageBox.warning(self, "Lỗi", "Không tìm thấy thông tin xác thực.")
-            self.reject()
-            return
-
         status, data = api_client.get_user_info(token, user_id)
         if status == 200:
             self.username_label.setText(data.get("username", ""))
             self.full_name_input.setText(data.get("full_name", ""))
             self.bio_input.setPlainText(data.get("bio", ""))
             
-            # Đặt QComboBox
-            gender = data.get("gender", "other")
-            index = self.gender_input.findText(gender, Qt.MatchFixedString)
-            if index >= 0:
-                self.gender_input.setCurrentIndex(index)
-                
-            # Đặt QDateEdit
-            dob_str = data.get("date_of_birth")
-            if dob_str:
-                self.dob_input.setDate(QDate.fromString(dob_str, "yyyy-MM-dd"))
-        else:
-            QMessageBox.critical(self, "Lỗi", f"Không thể tải hồ sơ: {data.get('msg')}")
-            self.reject()
+            gender_map = {"other": "Khác", "male": "Nam", "female": "Nữ"}
+            g_val = gender_map.get(data.get("gender", "other"), "Khác")
+            idx = self.gender_input.findText(g_val, Qt.MatchFixedString)
+            if idx >= 0: self.gender_input.setCurrentIndex(idx)
+            
+            dob = data.get("date_of_birth")
+            if dob: self.dob_input.setDate(QDate.fromString(dob, "yyyy-MM-dd"))
 
     def save_profile(self):
         token = self.parent_app.token
         
-        # Thu thập dữ liệu
-        full_name = self.full_name_input.text().strip()
-        gender = self.gender_input.currentText()
-        dob = self.dob_input.date().toString("yyyy-MM-dd")
-        bio = self.bio_input.toPlainText().strip()
+        gender_map_rev = {"Nam": "male", "Nữ": "female", "Khác": "other"}
+        gender = gender_map_rev.get(self.gender_input.currentText(), "other")
         
-        # Gọi API
         status, data = api_client.update_profile(
             token,
-            full_name=full_name,
+            full_name=self.full_name_input.text().strip(),
             gender=gender,
-            date_of_birth=dob,
-            bio=bio
+            date_of_birth=self.dob_input.date().toString("yyyy-MM-dd"),
+            bio=self.bio_input.toPlainText().strip()
         )
-
         if status == 200:
             QMessageBox.information(self, "Thành công", "Đã cập nhật hồ sơ.")
-            self.accept() # Đóng dialog
+            self.accept()
         else:
-            QMessageBox.warning(self, "Lỗi", f"Không thể cập nhật: {data.get('msg')}")
+            QMessageBox.warning(self, "Lỗi", f"Cập nhật thất bại: {data.get('msg')}")   

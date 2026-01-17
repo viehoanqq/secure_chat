@@ -44,7 +44,7 @@ def update_profile():
     profile.gender = data.get("gender", profile.gender)
     dob = data.get("date_of_birth")
     if dob:
-        profile.date_of_birth = datetime.strptime(dob, "%Y-%m-%d").date()
+        profile.date_of_birth = datetime.   strptime(dob, "%Y-%m-%d").date()
     profile.avatar_url = data.get("avatar_url", profile.avatar_url)
     profile.bio = data.get("bio", profile.bio)
 
